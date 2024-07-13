@@ -23,7 +23,7 @@ This project automates the creation and deletion of Jira tasks based on data fro
 
 To use this project, you will need:
 
-- Python 3.10 or higher
+- Python 3.09 or higher
 - A Jira account with API access
 - Google Sheets API enabled and corresponding credentials (https://developers.google.com/sheets/api/guides/concepts)
 - Access to the specified Google Spreadsheet
