@@ -23,8 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
     logging.StreamHandler()
 ])
 
-#yesterday = (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
-yesterday = datetime.now().strftime("%d.%m.%Y")
+yesterday = (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
 
 def get_issues_to_delete(issue_type):
     jql = f'project = {project_key} AND issuetype = "{issue_type}" AND summary ~ "\\"{yesterday}\\"" AND status = "To Do"'
