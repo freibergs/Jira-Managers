@@ -15,6 +15,7 @@ api_token = os.getenv("API_TOKEN")
 project_key = os.getenv("PROJECT_KEY")
 google_api_key = os.getenv("GOOGLE_API_KEY")
 google_spreadsheet_id = os.getenv("GOOGLE_SPREADSHEET_ID")
+google_spreadsheet_name = os.getenv("GOOGLE_SPREADSHEET_NAME")
 
 auth = HTTPBasicAuth(api_username, api_token)
 headers = {
@@ -29,21 +30,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 today = datetime.now().strftime("%d.%m.%Y")
 
-def get_spreadsheet_data(spreadsheet_id, api_key, range_name="Lapa1"):
+def get_spreadsheet_data(spreadsheet_id, api_key, range_name=google_spreadsheet_name):
     service = build('sheets', 'v4', developerKey=api_key)
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
     values = result.get('values', [])
-    
-    if not values:
-        print('No data found.')
-        return None
-    else:
-        return values
+    return values
 
 def parse_spreadsheet_data(data):
     managers_projects = {}
-    for row in data:
+    for row in data[1:]:
+        print (row)
         email = row[0]
         projects = row[1].split(', ')
         managers_projects[email] = projects
@@ -60,7 +57,7 @@ def issue_exists(summary):
     search_url = f"{jira_url}/rest/api/3/search"
     response = requests.get(search_url, headers=headers, auth=auth, params={'jql': jql})
     issues = response.json().get('issues', [])
-    logging.info(f"Checked for existing issues with summary '{summary}': {issues}")
+    logging.info(f"Checked for existing issues with summary '{summary}'")
     return len(issues) > 0, issues[0]['key'] if issues else None
 
 def create_issue(issue_type, summary, description, assignee=None, parent_key=None):
