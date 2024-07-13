@@ -151,15 +151,15 @@ Key functions:
 The Google Spreadsheet should be structured as follows:
 
 - Column A: Manager's email address
-- Column B: Comma-separated list of projects assigned to the manager
+- Column B: Comma-separated list of project codes assigned to the manager
 - Cell E2: Deletion condition for the whole `delete.py` script
 
 Example:
 ```
 | Email                | Projects           | ... | ... | Deletion Condition |
 |----------------------|--------------------|-----|-----|-------------------|
-| manager1@example.com | ProjectA, ProjectB | ... | ... | status = Done     |
-| manager2@example.com | ProjectC           | ... | ... |                   |
+| manager1@example.com | ABC, CDE, XYZ      | ... | ... | status = Done     |
+| manager2@example.com | BFY, XYZ           | ... | ... |                   |
 ```
 
 ## Jira Project Structure
