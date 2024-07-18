@@ -25,7 +25,7 @@ To use this project, you will need:
 
 - Python 3.09 or higher
 - A Jira account with API access
-- Google Sheets API enabled and corresponding credentials (https://developers.google.com/sheets/api/guides/concepts)
+- Google Sheets API enabled and corresponding credentials
 - Access to the specified Google Spreadsheet
 - The following Python libraries (installable via pip):
   - requests
@@ -39,7 +39,7 @@ To use this project, you will need:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/zajebs/Jira-Managers
+   git clone https://github.com/your-repo/jira-task-automation
    cd jira-task-automation
    ```
 
@@ -57,29 +57,22 @@ To use this project, you will need:
 
 ## Configuration
 
-1. Create a `.env` file in the project root directory with the following variables:
+Create a `.env` file in the project root directory with the following variables:
 
-   ```
-   JIRA_URL=https://your-domain.atlassian.net
-   API_USERNAME=your-jira-email@example.com
-   API_TOKEN=your-jira-api-token
-   PROJECT_KEY=YOUR_PROJECT_KEY
-   GOOGLE_API_KEY=your-google-api-key
-   GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
-   GOOGLE_SPREADSHEET_NAME=YourSheetName
-   GOOGLE_DELETE_CONDITION_CELL=E2
-   ```
+```
+JIRA_URL=https://your-url.atlassian.net
+API_USERNAME=your-api-username
+API_TOKEN=your-jira-api-token
+START_DATE_FIELD_ID=10034
+END_DATE_FIELD_ID=10035
+GOOGLE_API_KEY=your-google-api-key
+GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
+GOOGLE_SPREADSHEET_NAME=Managers
+GOOGLE_DELETE_CONDITION_CELL=E2
+DAYS_AGO_TO_DELETE=3
+```
 
-   Replace the values with your actual Jira and Google Sheets credentials and settings.
-
-2. Ensure that the `.env` file is included in your `.gitignore` to keep your credentials secure.
-
-3. Set up Google Sheets API:
-   - Go to the Google Cloud Console
-   - Create a new project or select an existing one
-   - Enable the Google Sheets API
-   - Create credentials (Service Account Key)
-   - Download the JSON key file and store it securely
+Replace the API token and Google API key with your actual credentials.
 
 ## Usage
 
@@ -105,18 +98,11 @@ This script performs the following actions:
 
 1. Loads environment variables and sets up authentication for Jira and Google Sheets.
 2. Retrieves data from the specified Google Spreadsheet.
-3. For each manager in the spreadsheet:
-   - Checks if an Epic for the manager exists. If not, it creates one.
-   - Creates a Task for the current date if it doesn't exist.
-   - For each project assigned to the manager, creates a Subtask if it doesn't exist.
+3. For each project and manager combination in the spreadsheet:
+   - Checks if an Epic for the project exists. If not, it creates one.
+   - Creates a Task for the manager if it doesn't exist.
+   - Creates a Subtask for the current date if it doesn't exist.
 4. Logs all actions and any errors encountered.
-
-Key functions:
-- `get_spreadsheet_data()`: Retrieves data from Google Sheets.
-- `parse_spreadsheet_data()`: Processes the raw data into a usable format.
-- `get_user_details()`: Retrieves Jira user details based on email.
-- `issue_exists()`: Checks if a Jira issue with a given summary already exists.
-- `create_issue()`: Creates a new Jira issue (Epic, Task, or Subtask).
 
 ### delete.py
 
@@ -124,27 +110,25 @@ This script performs the following actions:
 
 1. Loads environment variables and sets up authentication for Jira and Google Sheets.
 2. Retrieves a deletion condition from a specified cell in the Google Spreadsheet.
-3. Searches for and deletes Subtasks that match the condition and were created yesterday.
-4. Searches for Tasks that match the condition and were created yesterday.
-5. For each Task, checks if it has any remaining Subtasks. If not, it deletes the Task.
-6. Logs all actions and any errors encountered.
-
-Key functions:
-- `get_condition()`: Retrieves the deletion condition from Google Sheets.
-- `get_issues_to_delete()`: Searches for Jira issues matching the deletion criteria.
-- `delete_issue()`: Deletes a specified Jira issue.
-- `check_if_subtasks_exist()`: Checks if a Task has any remaining Subtasks.
+3. For each project:
+   - Finds the corresponding Epic.
+   - For each Task under the Epic:
+     - Searches for and deletes Subtasks that match the condition and were created on the specified date.
+     - If no Subtasks remain, deletes the Task.
+4. Logs all actions and any errors encountered.
 
 ## Environment Variables
 
 - `JIRA_URL`: Your Jira instance URL
 - `API_USERNAME`: Your Jira account email
 - `API_TOKEN`: Your Jira API token
-- `PROJECT_KEY`: The key of the Jira project where tasks will be created/deleted
+- `START_DATE_FIELD_ID`: Custom field ID for start date
+- `END_DATE_FIELD_ID`: Custom field ID for end date
 - `GOOGLE_API_KEY`: Your Google Sheets API key
-- `GOOGLE_SPREADSHEET_ID`: The ID of the Google Spreadsheet containing manager data
+- `GOOGLE_SPREADSHEET_ID`: The ID of the Google Spreadsheet containing project and manager data
 - `GOOGLE_SPREADSHEET_NAME`: The name of the sheet within the spreadsheet
 - `GOOGLE_DELETE_CONDITION_CELL`: The cell containing the deletion condition
+- `DAYS_AGO_TO_DELETE`: Number of days ago to target for deletion
 
 ## Google Spreadsheet Structure
 
@@ -152,7 +136,7 @@ The Google Spreadsheet should be structured as follows:
 
 - Column A: Manager's email address
 - Column B: Comma-separated list of project codes assigned to the manager
-- Cell E2: Deletion condition for the whole `delete.py` script
+- Cell E2: Deletion condition for the `delete.py` script
 
 Example:
 ```
@@ -166,29 +150,23 @@ Example:
 
 The scripts create and manage the following Jira issue types:
 
-1. Epic: One per manager, serving as a container for all tasks.
-2. Task: Daily task for each manager.
-3. Subtask: Individual project tasks under the daily task.
+1. Epic: One per project, serving as a container for all tasks.
+2. Task: One per manager for each project they're assigned to.
+3. Subtask: Daily subtask for each manager-project combination.
 
 The hierarchy is as follows:
 ```
-Epic (Manager Name)
-└── Task (Manager Name - Date)
-    ├── Subtask (Manager Name - Date - Project1)
-    ├── Subtask (Manager Name - Date - Project2)
-    └── Subtask (Manager Name - Date - Project3)
+Epic (PM {Project Code})
+└── Task (PM {Project Code} - {Manager Name})
+    └── Subtask (PM {Project Code} - {Manager Name} - {Date})
 ```
 
 ## Logging
 
-Both scripts log their activities to `script.log` in the project directory. The log includes:
+Both scripts log their activities to log files in the project directory. The log includes:
 - Information about created/deleted issues
 - Errors encountered during execution
 - API responses for troubleshooting
-
-Log levels used:
-- INFO: Successful operations and general information
-- ERROR: Failed operations and exceptions
 
 ## Troubleshooting
 
@@ -198,7 +176,7 @@ Common issues and their solutions:
    - Ensure your Jira API token and Google API key are correct and not expired.
    - Check that you have the necessary permissions in both Jira and Google Sheets.
 
-2. "Issue already exists" errors:
+2. "Issue already exists" messages:
    - This is normal if the script is run multiple times a day. The script checks for existing issues before creating new ones.
 
 3. Google Sheets API quota exceeded:
@@ -212,7 +190,7 @@ Common issues and their solutions:
 1. Never commit the `.env` file or any file containing credentials to version control.
 2. Use environment variables for all sensitive information.
 3. Regularly rotate your API tokens and keys.
-4. Ensure that only authorized personnel have access to the Google Spreadsheet and Jira project.
+4. Ensure that only authorized personnel have access to the Google Spreadsheet and Jira projects.
 5. Implement IP whitelisting for your Jira API token if possible.
 6. Regularly audit the scripts' activities through the log files.
 
