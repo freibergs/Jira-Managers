@@ -39,7 +39,7 @@ To use this project, you will need:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-repo/jira-task-automation
+   git clone https://github.com/freibergs/Jira-Managers
    cd jira-task-automation
    ```
 
